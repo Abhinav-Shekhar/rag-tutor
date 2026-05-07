@@ -1,5 +1,7 @@
 # ============================================================
 # ADAPTIVE MULTILINGUAL RAG TUTOR
+# FINAL STREAMLIT VERSION
+# EMBEDDED GEMINI KEY VIA STREAMLIT SECRETS
 # ============================================================
 
 import streamlit as st
@@ -28,17 +30,10 @@ learning logic.
 """)
 
 # ============================================================
-# GEMINI API KEY
+# GEMINI API KEY FROM STREAMLIT SECRETS
 # ============================================================
 
-api_key = st.sidebar.text_input(
-    "Enter Gemini API Key",
-    type="password"
-)
-
-if not api_key:
-    st.warning("Please enter Gemini API Key")
-    st.stop()
+api_key = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=api_key)
 
@@ -116,7 +111,7 @@ db = load_vector_db()
 st.success("Knowledge Base Loaded Successfully")
 
 # ============================================================
-# USER QUERY
+# USER QUESTION
 # ============================================================
 
 query = st.text_input(
@@ -135,6 +130,10 @@ if st.button("Generate Response"):
 
     with st.spinner("Generating personalized explanation..."):
 
+        # ====================================================
+        # RETRIEVE RELEVANT CHUNKS
+        # ====================================================
+
         results = db.similarity_search(query, k=3)
 
         context = "\n".join(
@@ -152,7 +151,7 @@ if st.button("Generate Response"):
             cluster_instruction = """
             User is digitally advanced.
             Provide technically detailed explanation.
-            Use conceptual depth.
+            Use conceptual depth and terminology.
             """
 
         elif "Cluster 2" in cluster:
@@ -169,7 +168,7 @@ if st.button("Generate Response"):
 
             cluster_instruction = """
             User has moderate capability.
-            Balance technical depth and simplicity.
+            Balance simplicity and conceptual depth.
             """
 
         # ====================================================
@@ -230,7 +229,7 @@ if st.button("Generate Response"):
 
             level_instruction = """
             Explain fundamentals first.
-            Keep explanation simple.
+            Keep explanation beginner-friendly.
             """
 
         elif level == "Advanced":
@@ -283,16 +282,16 @@ if st.button("Generate Response"):
         st.write(response.text)
 
         # ====================================================
-        # MINI ASSESSMENT
+        # QUICK ASSESSMENT
         # ====================================================
 
         st.subheader("Quick Understanding Check")
 
         quiz_prompt = f"""
-        Generate ONE conceptual quiz question from:
+        Generate ONE short conceptual quiz question from:
         {query}
 
-        Keep question concise.
+        Keep it concise.
         """
 
         quiz = model.generate_content(quiz_prompt)
@@ -305,7 +304,7 @@ if st.button("Generate Response"):
         )
 
         # ====================================================
-        # ADAPTIVE RETEACHING
+        # ADAPTIVE RE-TEACHING
         # ====================================================
 
         if understanding == "No":
@@ -319,10 +318,10 @@ if st.button("Generate Response"):
             {query}
 
             Instructions:
-            - Explain fundamentals first
-            - Use simple language
-            - Include multiple examples
-            - Avoid jargon
+            - explain fundamentals first
+            - use simple language
+            - include examples
+            - avoid jargon
             """
 
             retry = model.generate_content(
