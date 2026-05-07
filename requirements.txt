@@ -5,5 +5,7 @@ langchain-community
 langchain-text-splitters
 faiss-cpu
 sentence-transformers
-pypdf
+transformers
 torch
+torchvision
+pypdf
