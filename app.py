@@ -1,7 +1,6 @@
 # ============================================================
 # ADAPTIVE MULTILINGUAL RAG TUTOR
-# FINAL STREAMLIT VERSION
-# EMBEDDED GEMINI KEY VIA STREAMLIT SECRETS
+# FINAL WORKING STREAMLIT VERSION
 # ============================================================
 
 import streamlit as st
@@ -30,14 +29,17 @@ learning logic.
 """)
 
 # ============================================================
-# GEMINI API KEY FROM STREAMLIT SECRETS
+# GEMINI API CONFIG
 # ============================================================
 
 api_key = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=api_key)
 
-model = genai.GenerativeModel("gemini-pro")
+# IMPORTANT FIX
+model = genai.GenerativeModel(
+    "models/gemini-1.5-flash"
+)
 
 # ============================================================
 # LEARNER PROFILE
@@ -79,7 +81,7 @@ cluster = st.sidebar.selectbox(
 )
 
 # ============================================================
-# LOAD PREDEFINED PDF
+# LOAD PDF + VECTOR DATABASE
 # ============================================================
 
 pdf_path = "finance_notes.pdf"
@@ -102,7 +104,10 @@ def load_vector_db():
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
 
-    db = FAISS.from_documents(docs, embeddings)
+    db = FAISS.from_documents(
+        docs,
+        embeddings
+    )
 
     return db
 
@@ -134,7 +139,10 @@ if st.button("Generate Response"):
         # RETRIEVE RELEVANT CHUNKS
         # ====================================================
 
-        results = db.similarity_search(query, k=3)
+        results = db.similarity_search(
+            query,
+            k=3
+        )
 
         context = "\n".join(
             [r.page_content for r in results]
@@ -144,14 +152,12 @@ if st.button("Generate Response"):
         # CLUSTER PERSONALIZATION
         # ====================================================
 
-        cluster_instruction = ""
-
         if "Cluster 1" in cluster:
 
             cluster_instruction = """
             User is digitally advanced.
-            Provide technically detailed explanation.
-            Use conceptual depth and terminology.
+            Provide detailed technical explanation.
+            Include conceptual depth and terminology.
             """
 
         elif "Cluster 2" in cluster:
@@ -168,7 +174,7 @@ if st.button("Generate Response"):
 
             cluster_instruction = """
             User has moderate capability.
-            Balance simplicity and conceptual depth.
+            Balance simplicity and technical depth.
             """
 
         # ====================================================
@@ -206,13 +212,13 @@ if st.button("Generate Response"):
         elif learning_style == "Example-Based":
 
             style_instruction = """
-            Use practical real-life examples.
+            Use practical examples and analogies.
             """
 
         elif learning_style == "Technical":
 
             style_instruction = """
-            Include technical concepts and detailed reasoning.
+            Include detailed technical reasoning.
             """
 
         else:
@@ -249,14 +255,23 @@ if st.button("Generate Response"):
         # ====================================================
 
         prompt = f"""
-        Use the following academic context:
+        You are an adaptive academic tutor.
 
+        Use ONLY the provided academic context.
+
+        ===================================================
+
+        CONTEXT:
         {context}
 
-        Student Question:
+        ===================================================
+
+        STUDENT QUESTION:
         {query}
 
-        Instructions:
+        ===================================================
+
+        INSTRUCTIONS:
 
         {cluster_instruction}
 
@@ -267,9 +282,14 @@ if st.button("Generate Response"):
         {level_instruction}
 
         Also:
-        - include concise summary
-        - avoid unnecessary complexity
+        - Include concise summary
+        - Avoid unnecessary complexity
+        - Ensure educational clarity
         """
+
+        # ====================================================
+        # GENERATE RESPONSE
+        # ====================================================
 
         response = model.generate_content(prompt)
 
@@ -282,19 +302,22 @@ if st.button("Generate Response"):
         st.write(response.text)
 
         # ====================================================
-        # QUICK ASSESSMENT
+        # MINI ASSESSMENT
         # ====================================================
 
         st.subheader("Quick Understanding Check")
 
         quiz_prompt = f"""
-        Generate ONE short conceptual quiz question from:
+        Generate ONE short conceptual quiz question
+        based on:
         {query}
 
-        Keep it concise.
+        Keep it concise and beginner-friendly.
         """
 
-        quiz = model.generate_content(quiz_prompt)
+        quiz = model.generate_content(
+            quiz_prompt
+        )
 
         st.write(quiz.text)
 
@@ -318,17 +341,19 @@ if st.button("Generate Response"):
             {query}
 
             Instructions:
-            - explain fundamentals first
-            - use simple language
-            - include examples
-            - avoid jargon
+            - Explain fundamentals first
+            - Use simple language
+            - Include examples
+            - Avoid jargon
             """
 
             retry = model.generate_content(
                 retry_prompt
             )
 
-            st.subheader("Simplified Re-Explanation")
+            st.subheader(
+                "Simplified Re-Explanation"
+            )
 
             st.write(retry.text)
 
