@@ -38,7 +38,7 @@ genai.configure(api_key=api_key)
 
 # IMPORTANT FIX
 model = genai.GenerativeModel(
-    "gemini-2.0-flash"
+    "gemini-2.0-flash-lite"
 )
 
 # ============================================================
